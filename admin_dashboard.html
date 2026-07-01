@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Overview{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2" style="color:#f39c12;"></i>Admin Panel</h4>
+    <small class="text-muted">Platform-wide overview and management</small>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-4" style="gap:8px;">
+  <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Overview</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_expenses') }}"><i class="fas fa-money-bill-wave me-1"></i>All Expenses</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_categories') }}"><i class="fas fa-tags me-1"></i>Categories</a></li>
+</ul>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card h-100" style="background:linear-gradient(135deg,#8e44ad,#9b59b6);">
+      <div class="label"><i class="fas fa-users me-1"></i>Total Users</div>
+      <div class="value">{{ total_users }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card h-100" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+      <div class="label"><i class="fas fa-money-bill-wave me-1"></i>Total Expenses</div>
+      <div class="value">{{ total_expenses }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card h-100" style="background:linear-gradient(135deg,#e67e22,#d35400);">
+      <div class="label"><i class="fas fa-rupee-sign me-1"></i>Platform Total Spent</div>
+      <div class="value" style="font-size:1.4rem;">₹{{ '%.0f'|format(total_spent|float) }}</div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card h-100" style="background:linear-gradient(135deg,#27ae60,#2ecc71);">
+      <div class="label"><i class="fas fa-piggy-bank me-1"></i>Active Budgets</div>
+      <div class="value">{{ total_budgets }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Recent Users -->
+  <div class="col-md-5">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-user-clock me-2" style="color:#9b59b6;"></i>Recent Signups</h6>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light"><tr><th>Username</th><th>Joined</th><th>Role</th></tr></thead>
+        <tbody>
+          {% for u in recent_users %}
+          <tr>
+            <td class="fw-semibold">{{ u.username }}</td>
+            <td class="small text-muted">{{ u.date_joined.strftime('%d %b %Y') if u.date_joined else '—' }}</td>
+            <td>
+              {% if u.is_admin %}
+                <span class="badge" style="background:#f39c12;">Admin</span>
+              {% else %}
+                <span class="badge bg-secondary">User</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent Expenses -->
+  <div class="col-md-7">
+    <div class="card p-3 h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-history me-2 text-info"></i>Latest Expenses</h6>
+        <a href="{{ url_for('admin_expenses') }}" class="btn btn-sm btn-outline-secondary">View All</a>
+      </div>
+      <table class="table table-sm table-hover mb-0">
+        <thead class="table-light"><tr><th>User</th><th>Date</th><th>Category</th><th>Amount</th></tr></thead>
+        <tbody>
+          {% for e in recent_exps %}
+          <tr>
+            <td class="small">{{ e.user.username }}</td>
+            <td class="small text-muted">{{ e.date }}</td>
+            <td>
+              <span class="badge badge-expense">{{ e.category.name if e.category else '—' }}</span>
+            </td>
+            <td class="fw-semibold text-danger">-₹{{ e.amount }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

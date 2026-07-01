@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Admin — All Expenses{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2" style="color:#f39c12;"></i>Admin Panel</h4>
+    <small class="text-muted">All expenses across all users</small>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-4" style="gap:8px;">
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Overview</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+  <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_expenses') }}"><i class="fas fa-money-bill-wave me-1"></i>All Expenses</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_categories') }}"><i class="fas fa-tags me-1"></i>Categories</a></li>
+</ul>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th><th>User</th><th>Date</th><th>Category</th>
+          <th>Amount</th><th>Description</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in expenses %}
+        <tr>
+          <td class="text-muted small">#{{ e.id }}</td>
+          <td class="fw-semibold small">{{ e.user.username }}</td>
+          <td class="small">{{ e.date }}</td>
+          <td class="small">{{ e.category.name if e.category else '—' }}</td>
+          <td class="fw-bold text-danger">-₹{{ e.amount }}</td>
+          <td class="small text-muted">{{ (e.description or '—')[:35] }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('admin_delete_expense', pk=e.id) }}" class="d-inline"
+              onsubmit="return confirm('Delete this expense permanently?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">No expenses found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

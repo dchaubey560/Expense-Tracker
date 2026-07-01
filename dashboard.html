@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – Expense Tracker{% endblock %}
+
+{% block extra_head %}
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+{% endblock %}
+
+{% block content %}
+<h4 class="fw-bold mb-4"><i class="fas fa-tachometer-alt me-2 text-danger"></i>Dashboard — {{ current_month }}</h4>
+
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="stat-card" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">
+      <div class="label"><i class="fas fa-calendar-alt me-1"></i>This Month</div>
+      <div class="value">₹{{ '%.2f'|format(total_month|float) }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card" style="background:linear-gradient(135deg,#e67e22,#d35400);">
+      <div class="label"><i class="fas fa-sun me-1"></i>Today</div>
+      <div class="value">₹{{ '%.2f'|format(total_today|float) }}</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card" style="background:linear-gradient(135deg,#8e44ad,#9b59b6);">
+      <div class="label"><i class="fas fa-calendar-week me-1"></i>This Week</div>
+      <div class="value">₹{{ '%.2f'|format(total_week|float) }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHARTS -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-3 h-100">
+      <h6 class="fw-bold"><i class="fas fa-chart-pie me-2 text-danger"></i>Spending by Category</h6>
+      <div id="pieChart" style="height:260px;"></div>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card p-3 h-100">
+      <h6 class="fw-bold"><i class="fas fa-chart-line me-2 text-warning"></i>Monthly Expenses (6 Months)</h6>
+      <div id="lineChart" style="height:260px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <div class="card p-3">
+      <h6 class="fw-bold"><i class="fas fa-chart-bar me-2 text-danger"></i>This Week's Daily Spending</h6>
+      <div id="barChart" style="height:220px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BUDGETS & RECENT EXPENSES -->
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-piggy-bank me-2 text-warning"></i>Budget Status</h6>
+        <a href="{{ url_for('add_budget') }}" class="btn btn-sm btn-outline-danger">+ Add Budget</a>
+      </div>
+      {% if budgets %}
+        {% for b in budgets %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between">
+            <span class="small fw-semibold">{{ b.category.name }}</span>
+            <span class="small text-muted">₹{{ b.get_spent() }} / ₹{{ b.monthly_limit }}</span>
+          </div>
+          <div class="progress" style="height:8px;border-radius:4px;">
+            <div class="progress-bar
+              {% if b.get_percentage() >= 100 %}bg-danger
+              {% elif b.get_percentage() >= 80 %}bg-warning
+              {% else %}bg-success{% endif %}"
+              style="width:{{ b.get_percentage() }}%"></div>
+          </div>
+          <small class="text-muted">{{ b.get_percentage() }}% used</small>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted small">No budgets for this month. <a href="{{ url_for('add_budget') }}">Set one</a></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="fw-bold mb-0"><i class="fas fa-history me-2 text-info"></i>Recent Expenses</h6>
+        <a href="{{ url_for('add_expense') }}" class="btn btn-sm btn-outline-danger">+ Add</a>
+      </div>
+      {% if recent_expenses %}
+      <table class="table table-sm table-hover">
+        <thead><tr><th>Date</th><th>Category</th><th>Amount</th></tr></thead>
+        <tbody>
+          {% for e in recent_expenses %}
+          <tr>
+            <td class="small">{{ e.date }}</td>
+            <td>
+              <span class="badge badge-expense">
+                {{ e.category.name if e.category else '—' }}
+              </span>
+            </td>
+            <td class="fw-semibold text-danger">-₹{{ e.amount }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <a href="{{ url_for('expenses') }}" class="btn btn-sm btn-outline-secondary w-100">View All</a>
+      {% else %}
+        <p class="text-muted small">No expenses yet. <a href="{{ url_for('add_expense') }}">Add your first one!</a></p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+google.charts.load('current', {'packages': ['corechart', 'bar']});
+google.charts.setOnLoadCallback(drawAll);
+
+function drawAll() { drawPie(); drawLine(); drawBar(); }
+
+async function drawPie() {
+  const res = await fetch("{{ url_for('chart_pie') }}");
+  const json = await res.json();
+  if (json.data.length <= 1) {
+    document.getElementById('pieChart').innerHTML = '<p class="text-muted text-center mt-5">No expense data yet</p>';
+    return;
+  }
+  const data = google.visualization.arrayToDataTable(json.data);
+  new google.visualization.PieChart(document.getElementById('pieChart')).draw(data, {
+    pieHole: 0.4, legend: { position: 'bottom', textStyle: { fontSize: 11 } },
+    chartArea: { width: '90%', height: '75%' }, backgroundColor: 'transparent'
+  });
+}
+
+async function drawLine() {
+  const res = await fetch("{{ url_for('chart_line') }}");
+  const json = await res.json();
+  const data = google.visualization.arrayToDataTable(json.data);
+  new google.visualization.AreaChart(document.getElementById('lineChart')).draw(data, {
+    colors: ['#e74c3c'], legend: { position: 'top' },
+    chartArea: { width: '88%', height: '75%' }, backgroundColor: 'transparent'
+  });
+}
+
+async function drawBar() {
+  const res = await fetch("{{ url_for('chart_bar') }}");
+  const json = await res.json();
+  const data = google.visualization.arrayToDataTable(json.data);
+  new google.visualization.ColumnChart(document.getElementById('barChart')).draw(data, {
+    colors: ['#e74c3c'], legend: { position: 'none' },
+    chartArea: { width: '88%', height: '72%' }, backgroundColor: 'transparent',
+    vAxis: { format: '₹#,###' }
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Register – Expense Tracker{% endblock %}
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background:linear-gradient(135deg,#2c3e50,#e67e22); margin:-24px; padding:24px;">
+  <div class="card p-4" style="width:100%;max-width:440px;">
+    <div class="text-center mb-4">
+      <i class="fas fa-user-plus fa-3x" style="color:#e67e22;"></i>
+      <h4 class="mt-2 fw-bold">Create Account</h4>
+    </div>
+    <form method="POST">
+      {{ form.hidden_tag() }}
+      {% for field in form %}
+        {% if field.name != 'csrf_token' and field.name != 'submit' %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">{{ field.label.text }}</label>
+          {{ field(class="form-control") }}
+          {% for e in field.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      {{ form.submit(class="btn btn-danger w-100 py-2 mt-2") }}
+    </form>
+    <p class="text-center mt-3 text-muted">Have an account? <a href="{{ url_for('login') }}">Login</a></p>
+  </div>
+</div>
+{% endblock %}

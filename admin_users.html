@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Users{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2" style="color:#f39c12;"></i>Admin Panel</h4>
+    <small class="text-muted">Manage registered users</small>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-4" style="gap:8px;">
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Overview</a></li>
+  <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_expenses') }}"><i class="fas fa-money-bill-wave me-1"></i>All Expenses</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_categories') }}"><i class="fas fa-tags me-1"></i>Categories</a></li>
+</ul>
+
+<div class="card">
+  <div class="card-body p-0">
+    <table class="table table-hover mb-0">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th><th>Username</th><th>Email</th><th>Currency</th>
+          <th>Joined</th><th>Expenses</th><th>Role</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr {% if u.id == current_user.id %}class="table-warning"{% endif %}>
+          <td class="text-muted small">#{{ u.id }}</td>
+          <td class="fw-semibold">
+            {{ u.username }}
+            {% if u.id == current_user.id %}<span class="badge bg-secondary ms-1">You</span>{% endif %}
+          </td>
+          <td class="small">{{ u.email }}</td>
+          <td><span class="badge" style="background:#e74c3c;">{{ u.preferred_currency }}</span></td>
+          <td class="small text-muted">{{ u.date_joined.strftime('%d %b %Y') if u.date_joined else '—' }}</td>
+          <td class="text-center">{{ u.expenses | length }}</td>
+          <td>
+            {% if u.is_admin %}
+              <span class="badge" style="background:#f39c12;"><i class="fas fa-shield-alt me-1"></i>Admin</span>
+            {% else %}
+              <span class="badge bg-secondary">User</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if u.id != current_user.id %}
+            <form method="POST" action="{{ url_for('admin_toggle_admin', pk=u.id) }}" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm {% if u.is_admin %}btn-outline-warning{% else %}btn-outline-success{% endif %} me-1"
+                title="{{ 'Revoke Admin' if u.is_admin else 'Grant Admin' }}">
+                <i class="fas {% if u.is_admin %}fa-user-minus{% else %}fa-user-shield{% endif %}"></i>
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_user', pk=u.id) }}" class="d-inline"
+              onsubmit="return confirm('Delete user {{ u.username }} and ALL their data?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-sm btn-outline-danger" title="Delete User">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+            {% else %}
+              <span class="text-muted small">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">No users found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

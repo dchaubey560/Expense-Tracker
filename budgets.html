@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="fas fa-piggy-bank me-2 text-warning"></i>Budget Management</h4>
+  <a href="{{ url_for('add_budget') }}" class="btn btn-danger"><i class="fas fa-plus me-1"></i>Set Budget</a>
+</div>
+<div class="row g-3">
+  {% for b in budgets %}
+  <div class="col-md-4">
+    <div class="card p-4">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <h6 class="fw-bold mb-0">{{ b.category.name }}</h6>
+        <form method="POST" action="{{ url_for('delete_budget', pk=b.id) }}" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger border-0"><i class="fas fa-trash"></i></button>
+        </form>
+      </div>
+      <div class="text-muted small mb-1">{{ b.month.strftime('%B %Y') }}</div>
+      <div class="d-flex justify-content-between mb-1">
+        <span class="small">Spent: <strong class="text-danger">₹{{ b.get_spent() }}</strong></span>
+        <span class="small">Limit: <strong>₹{{ b.monthly_limit }}</strong></span>
+      </div>
+      <div class="progress" style="height:10px;border-radius:5px;">
+        <div class="progress-bar
+          {% if b.get_percentage() >= 100 %}bg-danger
+          {% elif b.get_percentage() >= 80 %}bg-warning
+          {% else %}bg-success{% endif %}"
+          style="width:{{ b.get_percentage() }}%"></div>
+      </div>
+      <div class="text-end mt-1">
+        <small class="{% if b.get_percentage() >= 100 %}text-danger fw-bold{% elif b.get_percentage() >= 80 %}text-warning fw-bold{% else %}text-muted{% endif %}">
+          {{ b.get_percentage() }}% used
+        </small>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card p-5 text-center">
+      <i class="fas fa-piggy-bank fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted">No budgets set yet</h5>
+      <a href="{{ url_for('add_budget') }}" class="btn btn-danger mt-2">Set Your First Budget</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

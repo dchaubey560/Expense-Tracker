@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Delete{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4 text-center">
+      <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+      <h5 class="fw-bold">Delete {{ type }}?</h5>
+      <p class="text-muted">Are you sure you want to delete <strong>{{ obj }}</strong>?<br>This cannot be undone.</p>
+      <form method="POST" class="d-flex gap-2 justify-content-center mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary px-4">Cancel</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

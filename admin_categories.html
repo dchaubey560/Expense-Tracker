@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Admin — Categories{% endblock %}
+{% block content %}
+
+<div class="d-flex align-items-center gap-3 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="fas fa-shield-alt me-2" style="color:#f39c12;"></i>Admin Panel</h4>
+    <small class="text-muted">Manage expense categories</small>
+  </div>
+</div>
+
+<ul class="nav nav-pills mb-4" style="gap:8px;">
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-tachometer-alt me-1"></i>Overview</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_users') }}"><i class="fas fa-users me-1"></i>Users</a></li>
+  <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_expenses') }}"><i class="fas fa-money-bill-wave me-1"></i>All Expenses</a></li>
+  <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_categories') }}"><i class="fas fa-tags me-1"></i>Categories</a></li>
+</ul>
+
+<div class="row g-3">
+  <!-- Add Category Form -->
+  <div class="col-md-4">
+    <div class="card p-4">
+      <h6 class="fw-bold mb-3"><i class="fas fa-plus-circle me-2 text-danger"></i>Add New Category</h6>
+      <form method="POST" action="{{ url_for('admin_add_category') }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">{{ form.name.label.text }}</label>
+          {{ form.name(class="form-control form-control-sm", placeholder="e.g. Groceries") }}
+          {% for e in form.name.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">{{ form.icon.label.text }}</label>
+          {{ form.icon(class="form-control form-control-sm", placeholder="fa-tag") }}
+          <small class="text-muted">From <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a> e.g. fa-car</small>
+          {% for e in form.icon.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">{{ form.color_hex.label.text }}</label>
+          <div class="input-group input-group-sm">
+            <input type="color" class="form-control form-control-sm" style="max-width:50px;padding:2px;"
+              oninput="document.getElementById('colorText').value=this.value" value="#e74c3c">
+            {{ form.color_hex(class="form-control form-control-sm", id="colorText") }}
+          </div>
+          {% for e in form.color_hex.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+        </div>
+        {{ form.submit(class="btn btn-danger btn-sm w-100") }}
+      </form>
+    </div>
+  </div>
+
+  <!-- Category List -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr><th>Preview</th><th>Name</th><th>Icon Class</th><th>Expenses</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for cat in categories %}
+            <tr>
+              <td>
+                <span class="badge rounded-pill" style="background:{{ cat.color_hex }}; font-size:.85rem; padding:6px 12px;">
+                  <i class="fas {{ cat.icon }} me-1"></i>{{ cat.name }}
+                </span>
+              </td>
+              <td class="fw-semibold">{{ cat.name }}</td>
+              <td><code class="small">{{ cat.icon }}</code></td>
+              <td class="text-center">
+                <span class="badge bg-light text-dark">{{ cat.expenses | length }}</span>
+              </td>
+              <td>
+                {% if cat.expenses | length == 0 %}
+                <form method="POST" action="{{ url_for('admin_delete_category', pk=cat.id) }}" class="d-inline"
+                  onsubmit="return confirm('Delete category {{ cat.name }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="fas fa-trash"></i></button>
+                </form>
+                {% else %}
+                  <span class="text-muted small" title="Has linked expenses">🔒 In use</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">No categories found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
